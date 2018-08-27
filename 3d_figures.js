@@ -4,6 +4,7 @@ var shaderProgram, shaderVertexPositionAttribute, shaderVertexColorAttribute,
     shaderProjectionMatrixUniform, shaderModelViewMatrixUniform;
 
 var duration = 5000; // ms
+var isUp = true;
 
 // Attributes: Input variables used in the vertex shader. Since the vertex shader is called on each vertex, these will be different every time the vertex shader is invoked.
 // Uniforms: Input variables for both the vertex and fragment shaders. These do not change values from vertex to vertex.
@@ -70,6 +71,353 @@ function initGL(canvas)
 }
 
 // TO DO: Create the functions for each of the figures.
+
+function createPyramid(gl, translation, rotationAxis)
+{
+     // Vertex Data
+     var vertexBuffer;
+     vertexBuffer = gl.createBuffer();
+     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+ 
+     var verts = [
+        // BASE
+         -1.0, -0.5, 0.0,
+         1.0, -0.5, 0.0,
+         0.0, -1.0, 0.0,
+         -0.5, 1.0, 0.0,
+         0.5, 1.0, 0.0,
+         
+        // TRIANGLES
+         -1.0, -0.5, 0.0,
+         0.0, -1.0, 0.0,
+         0.0, 0.0, 2.0,
+
+         1.0, -0.5, 0.0,
+         0.0, -1.0, 0.0,
+         0.0, 0.0, 2.0,
+
+         -1.0, -0.5, 0.0,
+         -0.5, 1.0, 0.0,
+         0.0, 0.0, 2.0,
+
+         1.0, -0.5, 0.0,
+         0.5, 1.0, 0.0,
+         0.0, 0.0, 2.0,
+
+         -0.5, 1.0, 0.0,
+         0.5, 1.0, 0.0,
+         0.0, 0.0, 2.0,
+    ];
+ 
+     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+     // Color data
+    var colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    var faceColors = [
+        [1.0, 0.0, 0.0, 1.0],
+        [0.0, 1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [1.0, 1.0, 0.0, 1.0],
+        [1.0, 0.0, 1.0, 1.0],
+        [0.0, 1.0, 1.0, 1.0],
+        [0.0, 1.0, 0.2, 1.0],
+    ];
+
+    var vertexColors = [];
+    // for (var i in faceColors) 
+    // {
+    //     var color = faceColors[i];
+    //     for (var j=0; j < 4; j++)
+    //         vertexColors = vertexColors.concat(color);
+    // }
+    for (const color of faceColors) 
+    {
+        for (var j=0; j < 3; j++)
+            vertexColors = vertexColors.concat(color);
+    }
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
+
+    // Index data (defines the triangles to be drawn).
+    var pyramidIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, pyramidIndexBuffer);
+    var pyramidIndices = [
+        1, 2, 4,    0, 2, 3,    3, 2, 4,
+        5, 6, 7,
+        8, 9, 10,
+        11, 12, 13,
+        14, 15, 16,
+        17, 18, 19,
+    ];
+
+    // gl.ELEMENT_ARRAY_BUFFER: Buffer used for element indices.
+    // Uint16Array: Array of 16-bit unsigned integers.
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(pyramidIndices), gl.STATIC_DRAW);
+    
+    var pyramid = {
+            buffer:vertexBuffer, colorBuffer:colorBuffer, indices:pyramidIndexBuffer,
+            vertSize:3, nVerts:20, colorSize:4, nColors: 24, nIndices:24,
+            primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
+
+    mat4.translate(pyramid.modelViewMatrix, pyramid.modelViewMatrix, translation);
+
+    pyramid.update = function()
+    {
+        var now = Date.now();
+        var deltat = now - this.currentTime;
+        this.currentTime = now;
+        var fract = deltat / duration;
+        var angle = Math.PI * 2 * fract;
+    
+        // Rotates a mat4 by the given angle
+        // mat4 out the receiving matrix
+        // mat4 a the matrix to rotate
+        // Number rad the angle to rotate the matrix by
+        // vec3 axis the axis to rotate around
+        mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
+    };
+    
+    return pyramid;
+}
+
+function createScutoid(gl, translation, rotationAxis)
+{
+     // Vertex Data
+     var vertexBuffer;
+     vertexBuffer = gl.createBuffer();
+     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+ 
+     var verts = [
+        // BASE PENT
+         -1.0, -0.5, 0.0,
+         1.0, -0.5, 0.0,
+         0.0, -1.0, 0.0,
+         -0.5, 1.0, 0.0,
+         0.5, 1.0, 0.0,
+         
+         // BASE HEXA
+         -1.0, 0.5, 2.0,
+         1.0, -0.5, 2.0,
+         -0.5, -1.0, 2.0,
+         0.5, -1.0, 2.0,
+         -0.5, 1.0, 2.0,
+         0.5, 1.0, 2.0,
+
+         //Triangle
+         -0.5, -1.0, 2.0,
+         0.5, -1.0, 2.0,
+         0.25, -1.0, 1.0,
+    ];
+ 
+     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+     // Color data
+    var colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    var faceColors = [
+        [1.0, 0.0, 0.0, 1.0],
+        [0.0, 1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [1.0, 1.0, 0.0, 1.0],
+        [1.0, 0.0, 1.0, 1.0],
+        [0.0, 1.0, 1.0, 1.0],
+        [0.0, 1.0, 0.2, 1.0],
+        [0.2, 1.0, 0.2, 1.0],
+    ];
+
+    var vertexColors = [];
+    // for (var i in faceColors) 
+    // {
+    //     var color = faceColors[i];
+    //     for (var j=0; j < 4; j++)
+    //         vertexColors = vertexColors.concat(color);
+    // }
+    for (const color of faceColors) 
+    {
+        for (var j=0; j < 3; j++)
+            vertexColors = vertexColors.concat(color);
+    }
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
+
+    // Index data (defines the triangles to be drawn).
+    var scutoidIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, scutoidIndexBuffer);
+    var scutoidIndices = [
+        1, 2, 4,    0, 2, 3,    3, 2, 4,
+        5, 2, 4,    5, 2, 3,    5, 2, 4,    5, 6, 7,
+        8, 9, 10,
+        11, 12, 13,
+        14, 15, 16,
+        17, 18, 19,
+    ];
+
+    // gl.ELEMENT_ARRAY_BUFFER: Buffer used for element indices.
+    // Uint16Array: Array of 16-bit unsigned integers.
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scutoidIndices), gl.STATIC_DRAW);
+    
+    var scutoid = {
+            buffer:vertexBuffer, colorBuffer:colorBuffer, indices:scutoidIndexBuffer,
+            vertSize:3, nVerts:20, colorSize:4, nColors: 24, nIndices:24,
+            primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
+
+    mat4.translate(scutoid.modelViewMatrix, scutoid.modelViewMatrix, translation);
+
+    scutoid.update = function()
+    {
+        var now = Date.now();
+        var deltat = now - this.currentTime;
+        this.currentTime = now;
+        var fract = deltat / duration;
+        var angle = Math.PI * 2 * fract;
+    
+        // Rotates a mat4 by the given angle
+        // mat4 out the receiving matrix
+        // mat4 a the matrix to rotate
+        // Number rad the angle to rotate the matrix by
+        // vec3 axis the axis to rotate around
+        mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
+    };
+    
+    return scutoid;
+}
+
+function createOctahedron(gl, translation, rotationAxis)
+{
+     // Vertex Data
+     var vertexBuffer;
+     vertexBuffer = gl.createBuffer();
+     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+ 
+     var verts = [
+         -1.0,  0.0,  0.0,
+         0.0,  1.0,  0.0,
+         0.0,  0.0,  1.0,
+
+         1.0,  0.0,  0.0,
+         0.0,  1.0,  0.0,
+         0.0,  0.0,  1.0,
+         
+         1.0,  0.0,  0.0,
+         0.0,  1.0,  0.0,
+         0.0,  0.0, -1.0,
+
+         -1.0,  0.0,  0.0,
+         0.0,  1.0,  0.0,
+         0.0,  0.0, -1.0,
+
+         //
+         -1.0,  0.0,  0.0,
+         0.0,  -1.0,  0.0,
+         0.0,  0.0,  1.0,
+
+         1.0,  0.0,  0.0,
+         0.0,  -1.0,  0.0,
+         0.0,  0.0,  1.0,
+         
+         1.0,  0.0,  0.0,
+         0.0,  -1.0,  0.0,
+         0.0,  0.0, -1.0,
+
+         -1.0,  0.0,  0.0,
+         0.0,  -1.0,  0.0,
+         0.0,  0.0, -1.0,
+        
+    ];
+ 
+     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+     // Color data
+    var colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    var faceColors = [
+        [1.0, 1.0, 1.0, 1.0],
+        [1.0, 1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [1.0, 0.0, 1.0, 1.0],
+        [0.0, 1.0, 0.0, 1.0],
+        [0.5, 0.0, 0.5, 1.0],
+        [0.0, 0.5, 0.5, 1.0],
+        [0.5, 0.2, 0.2, 1.0],
+    ];
+
+    var vertexColors = [];
+    // for (var i in faceColors) 
+    // {
+    //     var color = faceColors[i];
+    //     for (var j=0; j < 4; j++)
+    //         vertexColors = vertexColors.concat(color);
+    // }
+    for (const color of faceColors) 
+    {
+        for (var j=0; j < 3; j++)
+            vertexColors = vertexColors.concat(color);
+    }
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
+
+    // Index data (defines the triangles to be drawn).
+    var octahedronIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, octahedronIndexBuffer);
+    var octahedronIndices = [
+        0, 1, 2,
+        3, 4, 5,
+        6, 7, 8,
+        9, 10, 11,
+        12, 13, 14,
+        15, 16, 17,
+        18, 19, 20,
+        21, 22, 23
+    ];
+
+    // gl.ELEMENT_ARRAY_BUFFER: Buffer used for element indices.
+    // Uint16Array: Array of 16-bit unsigned integers.
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(octahedronIndices), gl.STATIC_DRAW);
+    
+    var octahedron = {
+            buffer:vertexBuffer, colorBuffer:colorBuffer, indices:octahedronIndexBuffer,
+            vertSize:3, nVerts:24, colorSize:4, nColors: 24, nIndices:24,
+            primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
+
+    mat4.translate(octahedron.modelViewMatrix, octahedron.modelViewMatrix, translation);
+        
+    octahedron.update = function()
+    {
+        var now = Date.now();
+        var deltat = now - this.currentTime;
+        this.currentTime = now;
+        var fract = deltat / duration;
+        var angle = Math.PI * 2 * fract;
+    
+        // Rotates a mat4 by the given angle
+        // mat4 out the receiving matrix
+        // mat4 a the matrix to rotate
+        // Number rad the angle to rotate the matrix by
+        // vec3 axis the axis to rotate around
+        mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
+        
+        if(!this.pos)
+            this.pos = 0;
+
+        if(this.isUp) 
+        {
+            this.pos = this.pos + 0.01;
+            mat4.translate(this.modelViewMatrix, this.modelViewMatrix, [0.0, 0.01, 0]);
+            if (this.pos >= 3.15)
+              this.isUp = false;
+        } 
+        else
+        {
+            this.pos = this.pos - 0.01;
+            mat4.translate(this.modelViewMatrix, this.modelViewMatrix, [0.0, -0.01, 0]);
+            if (this.pos <= -3.15)
+              this.isUp = true;
+        }
+    };
+    
+    return octahedron;
+}
 
 function createShader(gl, str, type)
 {
